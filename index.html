@@ -3,57 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Park | Slot Booking</title>
+    <title>SmartPark | Premium Booking</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        h1 { color: #1a73e8; font-size: 28px; margin-bottom: 10px; }
-        p { color: #5f6368; margin-bottom: 30px; }
-        
-        /* Parking Slot Design */
-        .parking-area { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
-        .slot { width: 90px; height: 120px; border: 3px solid #dadce0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        .available { border-color: #34a853; color: #34a853; background: #e6f4ea; }
-        .available:hover { background: #34a853; color: white; transform: translateY(-5px); }
-        .booked { background: #ea4335; border-color: #ea4335; color: white; cursor: not-allowed; opacity: 0.7; }
-        
-        /* QR Section */
-        #booking-result { display: none; padding: 20px; border-top: 2px dashed #dadce0; }
-        #qrcode { display: flex; justify-content: center; margin: 20px 0; }
-        .btn { background: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-        .btn:hover { background: #1765cc; }
+        :root {
+            --primary: #4f46e5;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #0f172a;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: white;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 { font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: -1px; }
+        .subtitle { color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
+
+        .parking-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .slot {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 20px 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slot i { font-size: 1.5rem; }
+
+        .available { border-color: var(--success); color: var(--success); }
+        .available:hover { 
+            background: rgba(34, 197, 94, 0.1); 
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
+        }
+
+        .booked { 
+            border-color: var(--danger); 
+            background: rgba(239, 68, 68, 0.1); 
+            color: var(--danger); 
+            cursor: not-allowed; 
+        }
+
+        #result-area {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #qrcode {
+            background: white;
+            padding: 15px;
+            border-radius: 16px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn:hover { opacity: 0.9; transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Smart Park</h1>
-   
+<div class="card">
+    <div id="selection-area">
+        <h1><i class="fas fa-parking"></i> SmartPark</h1>
+        <p class="subtitle">ඔබට කැමති නැවැතුම් අංගනය තෝරාගන්න</p>
 
-    <div class="parking-area">
-        <div id="S1" class="slot available" onclick="bookSlot('S1')">Slot 1</div>
-        <div id="S2" class="slot available" onclick="bookSlot('S2')">Slot 2</div>
-        <div id="S3" class="slot available" onclick="bookSlot('S3')">Slot 3</div>
+        <div class="parking-grid">
+            <div id="S1" class="slot available" onclick="bookSlot('S1')">
+                <i class="fas fa-car"></i>
+                <span>S-01</span>
+            </div>
+            <div id="S2" class="slot available" onclick="bookSlot('S2')">
+                <i class="fas fa-car"></i>
+                <span>S-02</span>
+            </div>
+            <div id="S3" class="slot available" onclick="bookSlot('S3')">
+                <i class="fas fa-car"></i>
+                <span>S-03</span>
+            </div>
+        </div>
     </div>
 
-    <div id="booking-result">
-        <h3 style="color: #34a853;">Booking is successful!</h3>
-        <p>Show this QR code when entering the gate.</p>
+    <div id="result-area">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success);"></i>
+        <h2 style="margin: 15px 0 5px;">Booking successful!</h2>
+        <p class="subtitle">Show this QR when entering</p>
         <div id="qrcode"></div>
-        <button class="btn" onclick="window.print()">Print / Save QR</button>
+        <p id="bid-text" style="font-family: monospace; letter-spacing: 2px;"></p>
+        <button class="btn" onclick="location.reload()"><i class="fas fa-arrow-left"></i> නැවත මුලට</button>
     </div>
 </div>
 
 <script>
-   
+  
     var firebaseConfig = {
-        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
+        apiKey:"AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
         databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
         projectId: "smart-parking-system-b0f8f",
     };
@@ -63,42 +154,35 @@
     const db = firebase.database();
 
     function bookSlot(slotID) {
+        let bookingID = "SP-" + Math.floor(100000 + Math.random() * 900000);
         
-        let bookingID = "PK-" + Math.floor(Math.random() * 1000000);
-        
-       
         db.ref('Slots/' + slotID).set({
             status: "Booked",
             bookingID: bookingID,
             entryTime: new Date().toLocaleString()
         }).then(() => {
-            
-            document.querySelector('.parking-area').style.display = 'none';
-            document.getElementById('booking-result').style.display = 'block';
-            
+            document.getElementById('selection-area').style.display = 'none';
+            document.getElementById('result-area').style.display = 'block';
+            document.getElementById('bid-text').innerText = bookingID;
             
             new QRCode(document.getElementById("qrcode"), {
                 text: bookingID,
-                width: 180,
-                height: 180
+                width: 160,
+                height: 160,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
             });
-        }).catch(error => {
-            alert("Error: " + error.message);
         });
     }
 
-   
     db.ref('Slots').on('value', (snapshot) => {
         const data = snapshot.val();
         for (let slot in data) {
-            if (data[slot].status === "Booked") {
-                let el = document.getElementById(slot);
-                if (el) {
-                    el.classList.remove('available');
-                    el.classList.add('booked');
-                    el.innerText = "Reserved";
-                    el.onclick = null;
-                }
+            let el = document.getElementById(slot);
+            if (el && data[slot].status === "Booked") {
+                el.classList.replace('available', 'booked');
+                el.innerHTML = '<i class="fas fa-user-lock"></i><span>FULL</span>';
+                el.onclick = null;
             }
         }
     });
