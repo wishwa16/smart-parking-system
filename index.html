@@ -7,100 +7,27 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         :root { --primary: #00d2ff; --secondary: #3a7bd5; --glass: rgba(255, 255, 255, 0.1); }
+        body { margin: 0; font-family: 'Poppins', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1500'); background-size: cover; background-position: center; }
+        .main-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .header-anim { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; margin: 0; }
+        .input-group { margin: 20px 0; display: flex; flex-direction: column; gap: 10px; }
+        input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; outline: none; }
+        .slot-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .parking-slot { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); padding: 15px 5px; border-radius: 15px; cursor: pointer; transition: 0.4s; color: white; }
+        .parking-slot:hover { background: var(--primary); transform: translateY(-3px); }
+        .booked { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; opacity: 0.6; cursor: not-allowed; }
         
-        body { 
-            margin: 0; 
-            font-family: 'Poppins', sans-serif; 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), 
-                        url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1500'); 
-            background-size: cover; 
-            background-position: center; 
-        }
-
-        .main-card { 
-            background: var(--glass); 
-            backdrop-filter: blur(25px); 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            padding: 35px; 
-            border-radius: 30px; 
-            text-align: center; 
-            width: 90%; 
-            max-width: 450px; 
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
-            animation: fadeIn 1s ease-out; 
-        }
-
-        .header-anim { 
-            font-size: 2.2rem; 
-            font-weight: 800; 
-            background: linear-gradient(to right, #00d2ff, #3a7bd5); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            animation: float 3s ease-in-out infinite; 
-            text-transform: uppercase; 
-            margin: 0; 
-        }
-
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-        .input-group { margin: 20px 0; display: flex; flex-direction: column; gap: 12px; }
-        
-        input { 
-            padding: 12px 15px; 
-            border-radius: 12px; 
-            border: 1px solid rgba(255,255,255,0.2); 
-            background: rgba(255,255,255,0.05); 
-            color: white; 
-            font-family: 'Poppins', sans-serif;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        input:focus { border-color: var(--primary); background: rgba(255,255,255,0.1); }
-
-        .slot-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px; }
-        
-        .parking-slot { 
-            background: rgba(255, 255, 255, 0.05); 
-            border: 2px solid rgba(255, 255, 255, 0.1); 
-            padding: 15px 5px; 
-            border-radius: 15px; 
-            cursor: pointer; 
-            transition: 0.4s; 
-            color: white; 
-            font-weight: 600;
-        }
-
-        .parking-slot:hover { transform: translateY(-5px); background: var(--primary); box-shadow: 0 0 20px var(--primary); border-color: white; }
-        .booked { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; cursor: not-allowed; opacity: 0.6; }
-
-        #timer-display { font-size: 2.8rem; color: #ffde59; font-weight: 800; margin: 10px 0; text-shadow: 0 0 15px rgba(255, 222, 89, 0.4); }
-        #qrcode-box { background: white; padding: 12px; border-radius: 20px; display: inline-block; margin: 5px 0; border: 4px solid var(--primary); }
-        
-        .warning-msg { 
-            color: #ff4d4d; 
-            font-weight: 600; 
-            font-size: 0.8rem; 
-            background: rgba(255, 77, 77, 0.15); 
-            padding: 12px; 
-            border-radius: 15px; 
-            margin-top: 15px; 
-            line-height: 1.4; 
-            border: 1px solid rgba(255, 77, 77, 0.3);
-        }
-
-        .hide { display: none; }
+        /* Booking Active Screen Styles */
+        #timer-display { font-size: 3rem; color: #ffde59; font-weight: 800; margin: 10px 0; }
+        #qrcode-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin: 15px 0; min-width: 140px; min-height: 140px; }
+        .warning-msg { color: #ff4d4d; font-weight: 600; font-size: 0.9rem; background: rgba(255, 77, 77, 0.15); padding: 15px; border-radius: 15px; border: 1px solid rgba(255, 77, 77, 0.3); }
+        .hide { display: none !important; }
     </style>
 </head>
 <body>
@@ -108,28 +35,26 @@
 <div class="main-card">
     <div id="ui-home">
         <h1 class="header-anim">Smart Parking</h1>
-        <p style="color: #bbb; letter-spacing: 1px; font-size: 0.75rem; margin: 8px 0 20px 0;">SECURE YOUR SPACE IN SECONDS</p>
-
         <div class="input-group">
-            <input type="text" id="v_number" placeholder="Vehicle Number (ex: CAB-1234)">
-            <input type="text" id="d_nic" placeholder="Driver NIC Number">
+            <input type="text" id="v_number" placeholder="Vehicle Number (CAB-1234)">
+            <input type="text" id="d_nic" placeholder="Driver NIC">
         </div>
-
-        <p style="color: #00d2ff; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px;">SELECT A SLOT TO BOOK</p>
         <div class="slot-container">
-            <div id="S1" class="parking-slot" onclick="validateAndBook('S1')"><i class="fas fa-car"></i><br>S-01</div>
-            <div id="S2" class="parking-slot" onclick="validateAndBook('S2')"><i class="fas fa-car"></i><br>S-02</div>
-            <div id="S3" class="parking-slot" onclick="validateAndBook('S3')"><i class="fas fa-car"></i><br>S-03</div>
+            <div id="S1" class="parking-slot" onclick="validateAndBook('S1')">S-01</div>
+            <div id="S2" class="parking-slot" onclick="validateAndBook('S2')">S-02</div>
+            <div id="S3" class="parking-slot" onclick="validateAndBook('S3')">S-03</div>
         </div>
     </div>
 
     <div id="ui-booking" class="hide">
-        <h2 style="color: #00d2ff; margin-bottom: 0;">Booking Active!</h2>
+        <h2 style="color: #00d2ff; margin: 0;">Booking Active!</h2>
         <div id="timer-display">01:00</div>
+        
         <div id="qrcode-box"></div>
+        
         <div class="warning-msg">
-            <i class="fas fa-clock"></i><br>
-            You have one minute. Please park the vehicle during that time. Or the booking will be cancelled!
+            <i class="fas fa-exclamation-circle"></i><br>
+           Please stop the vehicle within one minute. Or your booking will be cancelled!
         </div>
     </div>
 </div>
@@ -137,28 +62,26 @@
 <script>
     // --- Paste your Firebase Config here ---
     var firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        databaseURL: "YOUR_DATABASE_URL",
-        projectId: "YOUR_PROJECT_ID",
+        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
+        projectId: "smart-parking-system-b0f8f",
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let timerRef;
 
     function validateAndBook(slotID) {
         let vNo = document.getElementById('v_number').value.trim();
         let nic = document.getElementById('d_nic').value.trim();
 
-        if(vNo === "" || nic === "") {
-            alert("Please enter vehicle number and NIC number!");
+        if(!vNo || !nic) {
+            alert("Please enter vehicle number and NIC!");
             return;
         }
-        
-        bookNow(slotID, vNo, nic);
+        processBooking(slotID, vNo, nic);
     }
 
-    function bookNow(id, vNo, nic) {
+    function processBooking(id, vNo, nic) {
         let bID = "PK-" + Math.floor(1000 + Math.random() * 9000);
         let expire = Date.now() + 60000;
 
@@ -168,63 +91,46 @@
             vehicleNo: vNo,
             driverNIC: nic,
             expiresAt: expire,
-            sensorStatus: 0 // Default 0 (Empty)
+            sensorStatus: 0
         }).then(() => {
+            // UI Switch
             document.getElementById('ui-home').classList.add('hide');
             document.getElementById('ui-booking').classList.remove('hide');
+
             
-            // Generate QR
-            document.getElementById("qrcode-box").innerHTML = "";
-            new QRCode(document.getElementById("qrcode-box"), { 
-                text: bID, 
-                width: 140, 
-                height: 140 
+            document.getElementById("qrcode-box").innerHTML = ""; // Clear old QR
+            new QRCode(document.getElementById("qrcode-box"), {
+                text: bID,
+                width: 140,
+                height: 140,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
             });
-            
-            startCountdown(expire, id);
-        }).catch(e => alert("Error: " + e.message));
+
+            startTimer(expire, id);
+        });
     }
 
-    function startCountdown(expire, id) {
-        timerRef = setInterval(() => {
+    function startTimer(expire, id) {
+        let timer = setInterval(() => {
             let diff = expire - Date.now();
             if (diff <= 0) {
-                clearInterval(timerRef);
-                checkTimeout(id);
+                clearInterval(timer);
+                db.ref('Slots/' + id).once('value', s => {
+                    if (s.val() && s.val().sensorStatus === 0) {
+                        db.ref('Slots/' + id).remove().then(() => {
+                            alert("කාලය අවසන්! බුකින් එක අවලංගු විය.");
+                            location.reload();
+                        });
+                    }
+                });
             } else {
                 let s = Math.floor(diff / 1000);
                 document.getElementById('timer-display').innerText = `00:${s < 10 ? '0' : ''}${s}`;
             }
         }, 1000);
     }
-
-    function checkTimeout(id) {
-        db.ref('Slots/' + id).once('value', snapshot => {
-            const data = snapshot.val();
-            // If sensorStatus is still 0 after 1 minute, cancel booking
-            if (data && data.sensorStatus === 0) {
-                db.ref('Slots/' + id).remove().then(() => {
-                    alert("⚠️ කාලය අවසන්! ඔබගේ බුකින් එක අවලංගු විය.");
-                    location.reload();
-                });
-            } else {
-                alert("✅ Vehicle detected successfully! The booking is confirmed.");
-            }
-        });
-    }
-
-    // Real-time Update for Slot UI
-    db.ref('Slots').on('value', snapshot => {
-        let slots = snapshot.val();
-        for (let x in slots) {
-            let el = document.getElementById(x);
-            if (el && slots[x].status === "Booked") {
-                el.classList.add('booked');
-                el.innerHTML = '<i class="fas fa-lock"></i><br>FULL';
-                el.onclick = null;
-            }
-        }
-    });
 </script>
 </body>
 </html>
