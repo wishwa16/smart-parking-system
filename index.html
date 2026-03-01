@@ -7,186 +7,119 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root {
-            --primary: #4f46e5;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --bg: #0f172a;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: white;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2rem;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        h1 { font-weight: 700; font-size: 2rem; margin-bottom: 0.5rem; letter-spacing: -1px; }
-        .subtitle { color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
-
-        .parking-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 2rem;
-        }
-
-        .slot {
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px solid #334155;
-            border-radius: 16px;
-            padding: 20px 10px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .slot i { font-size: 1.5rem; }
-
-        .available { border-color: var(--success); color: var(--success); }
-        .available:hover { 
-            background: rgba(34, 197, 94, 0.1); 
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
-        }
-
-        .booked { 
-            border-color: var(--danger); 
-            background: rgba(239, 68, 68, 0.1); 
-            color: var(--danger); 
-            cursor: not-allowed; 
-        }
-
-        #result-area {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        #qrcode {
-            background: white;
-            padding: 15px;
-            border-radius: 16px;
-            display: inline-block;
-            margin: 20px 0;
-        }
-
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            width: 100%;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn:hover { opacity: 0.9; transform: scale(0.98); }
+        :root { --primary: #00d2ff; --secondary: #3a7bd5; --glass: rgba(255, 255, 255, 0.1); }
+        body { margin: 0; font-family: 'Poppins', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1500'); background-size: cover; background-position: center; }
+        .header-anim { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: float 3s ease-in-out infinite; text-transform: uppercase; margin: 0; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .main-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .slot-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
+        .parking-slot { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); padding: 20px 10px; border-radius: 15px; cursor: pointer; transition: 0.4s; color: white; }
+        .parking-slot:hover { transform: translateY(-5px); background: var(--primary); box-shadow: 0 0 15px var(--primary); }
+        .booked { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; cursor: not-allowed; opacity: 0.6; }
+        #timer-display { font-size: 2.5rem; color: #ffde59; font-weight: 800; margin: 20px 0; text-shadow: 0 0 10px rgba(255, 222, 89, 0.5); }
+        #qrcode-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin-top: 10px; }
+        .hide { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div id="selection-area">
-        <h1><i class="fas fa-parking"></i> SmartPark</h1>
-        <p class="subtitle">ඔබට කැමති නැවැතුම් අංගනය තෝරාගන්න</p>
-
-        <div class="parking-grid">
-            <div id="S1" class="slot available" onclick="bookSlot('S1')">
-                <i class="fas fa-car"></i>
-                <span>S-01</span>
-            </div>
-            <div id="S2" class="slot available" onclick="bookSlot('S2')">
-                <i class="fas fa-car"></i>
-                <span>S-02</span>
-            </div>
-            <div id="S3" class="slot available" onclick="bookSlot('S3')">
-                <i class="fas fa-car"></i>
-                <span>S-03</span>
-            </div>
+<div class="main-card">
+    <div id="ui-home">
+        <h1 class="header-anim">Smart Parking</h1>
+        <p style="color: #bbb; letter-spacing: 1.5px; font-size: 0.8rem; margin-top: 10px;">BOOK YOUR OWN SLOT</p>
+        <div class="slot-container">
+            <div id="S1" class="parking-slot" onclick="bookNow('S1')"><i class="fas fa-car"></i><br>S-01</div>
+            <div id="S2" class="parking-slot" onclick="bookNow('S2')"><i class="fas fa-car"></i><br>S-02</div>
+            <div id="S3" class="parking-slot" onclick="bookNow('S3')"><i class="fas fa-car"></i><br>S-03</div>
         </div>
     </div>
 
-    <div id="result-area">
-        <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success);"></i>
-        <h2 style="margin: 15px 0 5px;">Booking successful!</h2>
-        <p class="subtitle">Show this QR when entering</p>
-        <div id="qrcode"></div>
-        <p id="bid-text" style="font-family: monospace; letter-spacing: 2px;"></p>
-        <button class="btn" onclick="location.reload()"><i class="fas fa-arrow-left"></i> නැවත මුලට</button>
+    <div id="ui-booking" class="hide">
+        <h2 style="color: #00d2ff; margin-bottom: 5px;">Booking Active!</h2>
+        <p style="color: #eee; font-size: 0.9rem;">Please stop the vehicle within one minute</p>
+        <div id="timer-display">01:00</div>
+        <div id="qrcode-box"></div>
+        <p id="bid-text" style="font-size: 0.7rem; color: #aaa; margin-top: 15px;"></p>
     </div>
 </div>
 
 <script>
-  
+    // --- Paste your Firebase Config here ---
     var firebaseConfig = {
-        apiKey:"AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
+        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/"
         projectId: "smart-parking-system-b0f8f",
     };
-    // ----------------------------------------
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    let timerRef;
 
-    function bookSlot(slotID) {
-        let bookingID = "SP-" + Math.floor(100000 + Math.random() * 900000);
-        
-        db.ref('Slots/' + slotID).set({
+    function bookNow(id) {
+        let bID = "PK-" + Math.floor(1000 + Math.random() * 9000);
+        let expire = Date.now() + 60000; // 1 minute countdown
+
+        db.ref('Slots/' + id).set({
             status: "Booked",
-            bookingID: bookingID,
-            entryTime: new Date().toLocaleString()
+            bookingID: bID,
+            expiresAt: expire,
+            sensorStatus: 0 // 0 = Empty, 1 = Parked
         }).then(() => {
-            document.getElementById('selection-area').style.display = 'none';
-            document.getElementById('result-area').style.display = 'block';
-            document.getElementById('bid-text').innerText = bookingID;
+            document.getElementById('ui-home').classList.add('hide');
+            document.getElementById('ui-booking').classList.remove('hide');
+            document.getElementById('bid-text').innerText = "Booking Reference: " + bID;
             
-            new QRCode(document.getElementById("qrcode"), {
-                text: bookingID,
-                width: 160,
-                height: 160,
-                colorDark : "#0f172a",
-                colorLight : "#ffffff",
-            });
+            new QRCode(document.getElementById("qrcode-box"), { text: bID, width: 140, height: 140 });
+            startCountdown(expire, id);
         });
     }
 
-    db.ref('Slots').on('value', (snapshot) => {
-        const data = snapshot.val();
-        for (let slot in data) {
-            let el = document.getElementById(slot);
-            if (el && data[slot].status === "Booked") {
-                el.classList.replace('available', 'booked');
-                el.innerHTML = '<i class="fas fa-user-lock"></i><span>FULL</span>';
+    function startCountdown(expire, id) {
+        timerRef = setInterval(() => {
+            let now = Date.now();
+            let diff = expire - now;
+
+            if (diff <= 0) {
+                clearInterval(timerRef);
+                checkCancellation(id);
+            } else {
+                let s = Math.floor(diff / 1000);
+                document.getElementById('timer-display').innerText = `00:${s < 10 ? '0' : ''}${s}`;
+            }
+        }, 1000);
+    }
+
+    function checkCancellation(id) {
+        db.ref('Slots/' + id).once('value', snapshot => {
+            const data = snapshot.val();
+            if (data && data.sensorStatus === 0) {
+                db.ref('Slots/' + id).remove().then(() => {
+                    alert("⚠️ Time is up! You did not stop the vehicle in time. Therefore your booking has been cancelled.");
+                    location.reload();
+                });
+            } else {
+                alert("✅ Vehicle detected successfully! thank you");
+            }
+        });
+    }
+
+    // Listen for Slot Status Changes
+    db.ref('Slots').on('value', snapshot => {
+        let slots = snapshot.val();
+        for (let x in slots) {
+            let el = document.getElementById(x);
+            if (el && slots[x].status === "Booked") {
+                el.classList.add('booked');
+                el.innerHTML = '<i class="fas fa-lock"></i><br>FULL';
                 el.onclick = null;
             }
         }
     });
 </script>
-
 </body>
 </html>
