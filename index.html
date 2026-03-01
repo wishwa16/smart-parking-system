@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Park | Slot Booking</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; font-size: 28px; margin-bottom: 10px; }
+        p { color: #5f6368; margin-bottom: 30px; }
+        
+        /* Parking Slot Design */
+        .parking-area { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .slot { width: 90px; height: 120px; border: 3px solid #dadce0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .available { border-color: #34a853; color: #34a853; background: #e6f4ea; }
+        .available:hover { background: #34a853; color: white; transform: translateY(-5px); }
+        .booked { background: #ea4335; border-color: #ea4335; color: white; cursor: not-allowed; opacity: 0.7; }
+        
+        /* QR Section */
+        #booking-result { display: none; padding: 20px; border-top: 2px dashed #dadce0; }
+        #qrcode { display: flex; justify-content: center; margin: 20px 0; }
+        .btn { background: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn:hover { background: #1765cc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Smart Park</h1>
+   
+
+    <div class="parking-area">
+        <div id="S1" class="slot available" onclick="bookSlot('S1')">Slot 1</div>
+        <div id="S2" class="slot available" onclick="bookSlot('S2')">Slot 2</div>
+        <div id="S3" class="slot available" onclick="bookSlot('S3')">Slot 3</div>
+    </div>
+
+    <div id="booking-result">
+        <h3 style="color: #34a853;">Booking is successful!</h3>
+        <p>Show this QR code when entering the gate.</p>
+        <div id="qrcode"></div>
+        <button class="btn" onclick="window.print()">Print / Save QR</button>
+    </div>
+</div>
+
+<script>
+   
+    var firebaseConfig = {
+        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
+        projectId: "smart-parking-system-b0f8f",
+    };
+    // ----------------------------------------
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function bookSlot(slotID) {
+        
+        let bookingID = "PK-" + Math.floor(Math.random() * 1000000);
+        
+       
+        db.ref('Slots/' + slotID).set({
+            status: "Booked",
+            bookingID: bookingID,
+            entryTime: new Date().toLocaleString()
+        }).then(() => {
+            
+            document.querySelector('.parking-area').style.display = 'none';
+            document.getElementById('booking-result').style.display = 'block';
+            
+            
+            new QRCode(document.getElementById("qrcode"), {
+                text: bookingID,
+                width: 180,
+                height: 180
+            });
+        }).catch(error => {
+            alert("Error: " + error.message);
+        });
+    }
+
+   
+    db.ref('Slots').on('value', (snapshot) => {
+        const data = snapshot.val();
+        for (let slot in data) {
+            if (data[slot].status === "Booked") {
+                let el = document.getElementById(slot);
+                if (el) {
+                    el.classList.remove('available');
+                    el.classList.add('booked');
+                    el.innerText = "Reserved";
+                    el.onclick = null;
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
