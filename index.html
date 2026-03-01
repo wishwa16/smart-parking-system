@@ -12,17 +12,18 @@
     
     <style>
         :root { --primary: #00d2ff; --secondary: #3a7bd5; --glass: rgba(255, 255, 255, 0.1); }
-        body { margin: 0; font-family: 'Poppins', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1500'); background-size: cover; background-position: center; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=1500'); background-size: cover; background-position: center; }
+        .main-card { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: fadeIn 1s ease-out; }
         .header-anim { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: float 3s ease-in-out infinite; text-transform: uppercase; margin: 0; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .main-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 30px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: fadeIn 1s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .slot-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
         .parking-slot { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); padding: 20px 10px; border-radius: 15px; cursor: pointer; transition: 0.4s; color: white; }
-        .parking-slot:hover { transform: translateY(-5px); background: var(--primary); box-shadow: 0 0 15px var(--primary); }
+        .parking-slot:hover { transform: translateY(-5px); background: var(--primary); box-shadow: 0 0 20px var(--primary); border-color: white; }
         .booked { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; cursor: not-allowed; opacity: 0.6; }
-        #timer-display { font-size: 2.5rem; color: #ffde59; font-weight: 800; margin: 20px 0; text-shadow: 0 0 10px rgba(255, 222, 89, 0.5); }
-        #qrcode-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin-top: 10px; }
+        #timer-display { font-size: 2.8rem; color: #ffde59; font-weight: 800; margin: 15px 0; text-shadow: 0 0 15px rgba(255, 222, 89, 0.4); }
+        #qrcode-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin: 10px 0; border: 4px solid var(--primary); }
+        .warning-msg { color: #ff4d4d; font-weight: 600; font-size: 0.85rem; background: rgba(255, 77, 77, 0.1); padding: 10px; border-radius: 10px; margin-top: 10px; line-height: 1.4; border: 1px solid rgba(255, 77, 77, 0.2); }
         .hide { display: none; }
     </style>
 </head>
@@ -31,7 +32,7 @@
 <div class="main-card">
     <div id="ui-home">
         <h1 class="header-anim">Smart Parking</h1>
-        <p style="color: #bbb; letter-spacing: 1.5px; font-size: 0.8rem; margin-top: 10px;">BOOK YOUR OWN SLOT</p>
+        <p style="color: #bbb; letter-spacing: 2px; font-size: 0.8rem; margin-top: 10px; font-weight: 600;">BOOK YOUR OWN SLOT</p>
         <div class="slot-container">
             <div id="S1" class="parking-slot" onclick="bookNow('S1')"><i class="fas fa-car"></i><br>S-01</div>
             <div id="S2" class="parking-slot" onclick="bookNow('S2')"><i class="fas fa-car"></i><br>S-02</div>
@@ -40,19 +41,21 @@
     </div>
 
     <div id="ui-booking" class="hide">
-        <h2 style="color: #00d2ff; margin-bottom: 5px;">Booking Active!</h2>
-        <p style="color: #eee; font-size: 0.9rem;">Please stop the vehicle within one minute</p>
+        <h2 style="color: #00d2ff; margin-bottom: 0;">Booking Active!</h2>
         <div id="timer-display">01:00</div>
         <div id="qrcode-box"></div>
-        <p id="bid-text" style="font-size: 0.7rem; color: #aaa; margin-top: 15px;"></p>
+        <div class="warning-msg">
+            <i class="fas fa-exclamation-triangle"></i><br>
+           Please stop the vehicle within one minute. Or your booking will be cancelled!
+        </div>
     </div>
 </div>
 
 <script>
-    // --- Paste your Firebase Config here ---
+    
     var firebaseConfig = {
         apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/"
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
         projectId: "smart-parking-system-b0f8f",
     };
 
@@ -62,7 +65,7 @@
 
     function bookNow(id) {
         let bID = "PK-" + Math.floor(1000 + Math.random() * 9000);
-        let expire = Date.now() + 60000; // 1 minute countdown
+        let expire = Date.now() + 60000; 
 
         db.ref('Slots/' + id).set({
             status: "Booked",
@@ -72,14 +75,22 @@
         }).then(() => {
             document.getElementById('ui-home').classList.add('hide');
             document.getElementById('ui-booking').classList.remove('hide');
-            document.getElementById('bid-text').innerText = "Booking Reference: " + bID;
             
-            new QRCode(document.getElementById("qrcode-box"), { text: bID, width: 140, height: 140 });
-            startCountdown(expire, id);
-        });
+            // QR Generator
+            document.getElementById("qrcode-box").innerHTML = "";
+            new QRCode(document.getElementById("qrcode-box"), { 
+                text: bID, 
+                width: 140, 
+                height: 140,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff"
+            });
+            
+            startTimer(expire, id);
+        }).catch(e => alert("Error: " + e.message));
     }
 
-    function startCountdown(expire, id) {
+    function startTimer(expire, id) {
         timerRef = setInterval(() => {
             let now = Date.now();
             let diff = expire - now;
@@ -97,18 +108,19 @@
     function checkCancellation(id) {
         db.ref('Slots/' + id).once('value', snapshot => {
             const data = snapshot.val();
+            
             if (data && data.sensorStatus === 0) {
                 db.ref('Slots/' + id).remove().then(() => {
-                    alert("⚠️ Time is up! You did not stop the vehicle in time. Therefore your booking has been cancelled.");
+                    alert("⚠️ Time is up! You did not stop the vehicle in time. Your booking has been cancelled.");
                     location.reload();
                 });
             } else {
-                alert("✅ Vehicle detected successfully! thank you");
+                alert("✅ Vehicle detected successfully! thank you.");
             }
         });
     }
 
-    // Listen for Slot Status Changes
+    
     db.ref('Slots').on('value', snapshot => {
         let slots = snapshot.val();
         for (let x in slots) {
