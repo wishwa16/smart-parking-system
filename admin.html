@@ -101,8 +101,7 @@
 <script>
     var firebaseConfig = {
         apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/
-",
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
         projectId: "smart-parking-system-b0f8f",
     };
     firebase.initializeApp(firebaseConfig);
@@ -117,7 +116,7 @@
 
     // Load Data from Firebase
     function loadData() {
-        // 1. සාර්ථක පාර්කින් දත්ත
+        
         db.ref('ParkingHistory').on('value', snap => {
             const data = snap.val();
             const body = document.getElementById('body-success');
@@ -139,7 +138,7 @@
             document.getElementById('count-success').innerText = count;
         });
 
-        // 2. අවලංගු වූ දත්ත
+        
         db.ref('CancelledBookings').on('value', snap => {
             const data = snap.val();
             const body = document.getElementById('body-cancelled');
