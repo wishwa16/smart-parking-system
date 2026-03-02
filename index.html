@@ -3,146 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartPark | Secure Booking</title>
+    <title>SmartPark | Admin Master Panel</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root { --primary: #00d2ff; --glass: rgba(255, 255, 255, 0.1); }
-        body { margin: 0; font-family: 'Poppins', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; background: #0b0f1a; color: white; overflow: hidden; }
+        :root { --primary: #00d2ff; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05); }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #0b121f; color: white; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; }
         
-        .main-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 35px; border-radius: 30px; text-align: center; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-        
-        h1 { font-weight: 800; background: linear-gradient(to right, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 20px 0; }
-        
-        .input-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        input { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--primary); }
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--glass); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .stat-card h3 { font-size: 0.8rem; color: #888; margin: 0; }
+        .stat-num { font-size: 2rem; font-weight: 800; color: var(--primary); display: block; margin-top: 5px; }
 
-        .slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .slot { padding: 15px 5px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 15px; cursor: pointer; transition: 0.3s; }
-        .slot:hover { background: var(--primary); transform: translateY(-3px); border-color: white; }
-        .booked { background: rgba(239, 68, 68, 0.2) !important; border-color: #ef4444 !important; opacity: 0.6; cursor: not-allowed; }
+        /* Tabs Navigation */
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 12px; width: fit-content; }
+        .tab-btn { background: none; border: none; color: #888; padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; border-radius: 8px; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: #0b121f; }
 
-        /* Timer UI */
-        #timer { font-size: 3rem; font-weight: 800; color: #ffde59; margin: 10px 0; }
-        #qr-box { background: white; padding: 15px; border-radius: 15px; display: inline-block; margin: 15px 0; }
-        .warn { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 12px; border-radius: 12px; font-size: 0.8rem; color: #ff4d4d; font-weight: 600; }
+        /* Table Design */
+        .table-container { background: var(--glass); border-radius: 20px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; text-transform: uppercase; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.85rem; }
         
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; }
+        .badge-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .badge-cancel { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .login-box { text-align: center; max-width: 350px; margin: 100px auto; padding: 30px; background: var(--glass); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; box-sizing: border-box; }
         .hide { display: none !important; }
+        @media print { .no-print { display: none; } body { background: white; color: black; } table { color: black; border: 1px solid #ddd; } }
     </style>
 </head>
 <body>
 
-<div class="main-card">
-    <div id="screen-home">
-        <h1>SmartPark</h1>
-        <div class="input-group">
-            <input type="text" id="v_no" placeholder="Vehicle Number (CAB-1234)">
-            <input type="text" id="d_nic" placeholder="Driver NIC">
-        </div>
-        <div class="slot-grid">
-            <div id="S1" class="slot" onclick="book('S1')">S-01</div>
-            <div id="S2" class="slot" onclick="book('S2')">S-02</div>
-            <div id="S3" class="slot" onclick="book('S3')">S-03</div>
-        </div>
+<div class="container">
+    <div id="login-section" class="login-box">
+        <i class="fas fa-user-lock fa-3x" style="color: var(--primary); margin-bottom: 15px;"></i>
+        <h2>Admin Login</h2>
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-top:10px;">LOGIN</button>
     </div>
 
-    <div id="screen-active" class="hide">
-        <h2 style="color:var(--primary); margin:0;">Booking Active</h2>
-        <div id="timer">01:00</div>
-        <div id="qr-box"></div>
-        <div class="warn">
-            <i class="fas fa-clock"></i><br>
-           Please stop the vehicle within one minute. Or your booking will be cancelled!
+    <div id="dashboard-section" class="hide">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h1 style="margin: 0; font-weight: 800;">SmartPark <span style="color:var(--primary)">Analytics</span></h1>
+            <button class="no-print" onclick="window.print()" style="padding:10px 20px; background:var(--primary); border:none; border-radius:10px; font-weight:700; cursor:pointer;"><i class="fas fa-print"></i> PRINT REPORT</button>
+        </div>
+
+        <div class="stats-grid no-print">
+            <div class="stat-card"><h3>SUCCESSFUL PARKINGS</h3><span class="stat-num" id="stat-ok">0</span></div>
+            <div class="stat-card"><h3>CANCELLED (TIMEOUT)</h3><span class="stat-num" id="stat-fail" style="color:var(--danger)">0</span></div>
+        </div>
+
+        <div class="tabs no-print">
+            <button id="t1" class="tab-btn active" onclick="show('success')">Parking History</button>
+            <button id="t2" class="tab-btn" onclick="show('cancelled')">Cancelled Bookings</button>
+        </div>
+
+        <div class="table-container">
+            <div id="view-success">
+                <table>
+                    <thead>
+                        <tr><th>Slot</th><th>Vehicle No</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr>
+                    </thead>
+                    <tbody id="body-success"></tbody>
+                </table>
+            </div>
+
+            <div id="view-cancelled" class="hide">
+                <table>
+                    <thead>
+                        <tr><th>Vehicle No</th><th>Driver NIC</th><th>Booked At</th><th>Reason</th></tr>
+                    </thead>
+                    <tbody id="body-cancelled"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- Firebase Config ---
+    // --- Paste your Firebase Config here ---
     var firebaseConfig = {
-        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
+        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",,
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/";
         projectId: "smart-parking-system-b0f8f",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function book(id) {
-        let v = document.getElementById('v_no').value.trim();
-        let n = document.getElementById('d_nic').value.trim();
+    function login() {
+        let u = document.getElementById('user').value;
+        let p = document.getElementById('pass').value;
+        if(u === "admin" && p === "shop123") {
+            document.getElementById('login-section').classList.add('hide');
+            document.getElementById('dashboard-section').classList.remove('hide');
+            startSync();
+        } else { alert("Login Failed!"); }
+    }
 
-        if(!v || !n) { alert("කරුණාකර දත්ත ඇතුළත් කරන්න!"); return; }
+    function show(type) {
+        document.getElementById('view-success').classList.toggle('hide', type !== 'success');
+        document.getElementById('view-cancelled').classList.toggle('hide', type !== 'cancelled');
+        document.getElementById('t1').classList.toggle('active', type === 'success');
+        document.getElementById('t2').classList.toggle('active', type === 'cancelled');
+    }
 
-        let bID = "PK-" + Math.floor(1000 + Math.random() * 9000);
-        let exp = Date.now() + 60000;
+    function startSync() {
+        // 1. Success History Load
+        db.ref('ParkingHistory').on('value', snap => {
+            const data = snap.val();
+            const body = document.getElementById('body-success');
+            body.innerHTML = "";
+            let count = 0;
+            if(data) {
+                for(let id in data) {
+                    count++;
+                    let r = data[id];
+                    body.innerHTML += `<tr>
+                        <td><b>${r.slotID}</b></td><td>${r.vehicleNo}</td>
+                        <td>${r.inTime || '--'}</td><td>${r.outTime || '--'}</td>
+                        <td>${calculateMins(r.inTime, r.outTime)}</td>
+                        <td><span class="badge badge-success">Completed</span></td>
+                    </tr>`;
+                }
+            }
+            document.getElementById('stat-ok').innerText = count;
+        });
 
-        
-        db.ref('Slots/' + id).set({
-            status: "Booked",
-            bookingID: bID,
-            vehicleNo: v,
-            driverNIC: n,
-            bookedAt: new Date().toLocaleString(),
-            sensorStatus: 0,
-            expiresAt: exp
-        }).then(() => {
-            document.getElementById('screen-home').classList.add('hide');
-            document.getElementById('screen-active').classList.remove('hide');
-
-            // QR Code Generator
-            new QRCode(document.getElementById("qr-box"), { text: bID, width: 130, height: 130 });
-            
-            startCountdown(exp, id, v, n);
+        // 2. Cancelled History Load
+        db.ref('CancelledBookings').on('value', snap => {
+            const data = snap.val();
+            const body = document.getElementById('body-cancelled');
+            body.innerHTML = "";
+            let count = 0;
+            if(data) {
+                for(let id in data) {
+                    count++;
+                    let r = data[id];
+                    body.innerHTML += `<tr>
+                        <td>${r.vehicleNo}</td><td>${r.driverNIC}</td>
+                        <td>${r.bookedAt}</td><td><span class="badge badge-cancel">Timeout</span></td>
+                    </tr>`;
+                }
+            }
+            document.getElementById('stat-fail').innerText = count;
         });
     }
 
-    function startCountdown(exp, id, v, n) {
-        let t = setInterval(() => {
-            let now = Date.now();
-            let diff = exp - now;
-
-            if (diff <= 0) {
-                clearInterval(t);
-                
-                db.ref('Slots/' + id).once('value', s => {
-                    if (s.val() && s.val().sensorStatus === 0) {
-                        db.ref('CancelledBookings').push({
-                            vehicleNo: v,
-                            driverNIC: n,
-                            bookedAt: new Date().toLocaleString(),
-                            slotID: id,
-                            reason: "Timeout (1 min)"
-                        }).then(() => {
-                            db.ref('Slots/' + id).remove();
-                            alert("⚠️ Time is up! Your booking has been cancelled.");
-                            location.reload();
-                        });
-                    }
-                });
-            } else {
-                let sec = Math.floor(diff / 1000);
-                document.getElementById('timer').innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
-            }
-        }, 1000);
+    function calculateMins(inT, outT) {
+        if(!inT || !outT) return "0 mins";
+        let diff = new Date(outT) - new Date(inT);
+        return Math.floor(diff / 60000) + " mins";
     }
-
-    // Real-time slot status update
-    db.ref('Slots').on('value', snap => {
-        let data = snap.val();
-        for(let id in data) {
-            let el = document.getElementById(id);
-            if(el && data[id].status === "Booked") {
-                el.classList.add('booked');
-                el.innerHTML = "FULL";
-                el.onclick = null;
-            }
-        }
-    });
 </script>
 </body>
 </html>
