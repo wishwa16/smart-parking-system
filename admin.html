@@ -2,75 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SmartPark | Admin Analytics</title>
+    <title>SmartPark | Admin Control</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00d2ff; --success: #22c55e; --danger: #ef4444; --bg: #0b121f; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
-        .analysis-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        .ana-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        .ana-num { font-size: 2rem; font-weight: 800; display: block; color: var(--primary); }
-        .tabs { display: flex; gap: 15px; margin-bottom: 20px; }
-        .tab-btn { background: rgba(255,255,255,0.05); border: none; color: #888; padding: 12px 25px; cursor: pointer; border-radius: 10px; font-weight: 600; }
-        .tab-btn.active { background: var(--primary); color: #0b121f; }
-        .table-box { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; }
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; }
-        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--success); }
-        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .hide { display: none !important; }
-        .login-screen { text-align: center; margin-top: 100px; }
-        input[type="password"] { padding: 12px; border-radius: 10px; border: none; width: 250px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        h2 { color: var(--primary); border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
+        .text-success { color: var(--success); font-weight: bold; }
+        .text-danger { color: var(--danger); font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div id="login-ui" class="login-screen">
-        <h1>Admin Access</h1>
-        <input type="password" id="admin-pw" placeholder="Enter Admin Password">
-        <button onclick="doLogin()" style="padding:12px 20px; border-radius:10px; border:none; background:var(--primary); cursor:pointer; font-weight:700">LOGIN</button>
-    </div>
+    <h1>Master Admin Dashboard</h1>
+    <p id="status-msg" style="color: #888;">System Monitoring Active...</p>
 
-    <div id="admin-dash" class="hide">
-        <h1>Parking <span style="color:var(--primary)">Analytics</span></h1>
-        
-        <div class="analysis-grid">
-            <div class="ana-card"><h3>Total Bookings</h3><span class="ana-num" id="stat-all">0</span></div>
-            <div class="ana-card"><h3>Successful</h3><span class="ana-num" id="stat-s" style="color:var(--success)">0</span></div>
-            <div class="ana-card"><h3>Cancelled</h3><span class="ana-num" id="stat-c" style="color:var(--danger)">0</span></div>
+    <div class="grid">
+        <div class="card">
+            <h2 style="color: var(--success)">Parking History (Success)</h2>
+            <table>
+                <thead><tr><th>Slot</th><th>Vehicle No</th><th>In Time</th></tr></thead>
+                <tbody id="body-success"></tbody>
+            </table>
         </div>
 
-        <div class="tabs">
-            <button id="btn-s" class="tab-btn active" onclick="switchView('s')">Arrived History</button>
-            <button id="btn-c" class="tab-btn" onclick="switchView('c')">Cancelled (No-Show)</button>
-        </div>
-
-        <div class="table-box">
-            <div id="view-s">
-                <table>
-                    <thead><tr><th>Slot</th><th>Vehicle No</th><th>In Time</th><th>Out Time</th><th>Status</th></tr></thead>
-                    <tbody id="body-s"></tbody>
-                </table>
-            </div>
-            <div id="view-c" class="hide">
-                <table>
-                    <thead><tr><th>Vehicle No</th><th>NIC</th><th>Booked At</th><th>Reason</th></tr></thead>
-                    <tbody id="body-c"></tbody>
-                </table>
-            </div>
+        <div class="card">
+            <h2 style="color: var(--danger)">Cancelled History (No-Show)</h2>
+            <table>
+                <thead><tr><th>Vehicle No</th><th>NIC</th><th>Reason</th></tr></thead>
+                <tbody id="body-cancel"></tbody>
+            </table>
         </div>
     </div>
-</div>
 
 <script>
-    var firebaseConfig = {
+    const firebaseConfig = {
         apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
         databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
         projectId: "smart-parking-system-b0f8f"
@@ -78,56 +50,53 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function doLogin() {
-        if(document.getElementById('admin-pw').value === "shop123") {
-            document.getElementById('login-ui').classList.add('hide');
-            document.getElementById('admin-dash').classList.remove('hide');
-            startSync();
-        } else { alert("Wrong Password!"); }
-    }
+    // --- CRITICAL MONITORING LOGIC ---
+    // Every 5 seconds, check all slots for timeouts
+    setInterval(() => {
+        db.ref('Slots').once('value', snap => {
+            const slots = snap.val();
+            const now = Date.now();
 
-    function switchView(v) {
-        document.getElementById('view-s').classList.toggle('hide', v !== 's');
-        document.getElementById('view-c').classList.toggle('hide', v !== 'c');
-        document.getElementById('btn-s').classList.toggle('active', v === 's');
-        document.getElementById('btn-c').classList.toggle('active', v === 'c');
-    }
-
-    function startSync() {
-        db.ref('ParkingHistory').on('value', snap => {
-            const data = snap.val();
-            const body = document.getElementById('body-s');
-            body.innerHTML = "";
-            let count = 0;
-            for(let id in data) {
-                count++;
-                let r = data[id];
-                body.innerHTML += `<tr><td><b>${r.slotID}</b></td><td>${r.vehicleNo}</td><td>${r.inTime}</td><td>${r.outTime || 'Live'}</td><td><span class="badge badge-success">ARRIVED</span></td></tr>`;
+            for (let id in slots) {
+                const data = slots[id];
+                // If time is up AND vehicle hasn't arrived (sensorStatus is 0)
+                if (data.expiresAt && now > data.expiresAt && data.sensorStatus === 0) {
+                    console.log("Expiring Slot: " + id);
+                    
+                    // 1. Copy data to CancelledBookings
+                    db.ref('CancelledBookings').push({
+                        vehicleNo: data.vehicleNo,
+                        driverNIC: data.driverNIC,
+                        bookedAt: data.bookedAt,
+                        reason: "Timeout - No Show",
+                        slotID: id
+                    }).then(() => {
+                        // 2. Clear the slot so it becomes available again
+                        db.ref('Slots/' + id).remove();
+                    });
+                }
             }
-            document.getElementById('stat-s').innerText = count;
-            updateTotal();
         });
+    }, 5000);
 
-        db.ref('CancelledBookings').on('value', snap => {
-            const data = snap.val();
-            const body = document.getElementById('body-c');
-            body.innerHTML = "";
-            let count = 0;
-            for(let id in data) {
-                count++;
-                let r = data[id];
-                body.innerHTML += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td>${r.bookedAt}</td><td><span class="badge badge-danger">TIMEOUT</span></td></tr>`;
-            }
-            document.getElementById('stat-c').innerText = count;
-            updateTotal();
+    // --- Display Data ---
+    db.ref('ParkingHistory').on('value', snap => {
+        let html = "";
+        snap.forEach(child => {
+            const r = child.val();
+            html += `<tr><td><b>${r.slotID || 'S1'}</b></td><td>${r.vehicleNo}</td><td class="text-success">${r.inTime}</td></tr>`;
         });
-    }
+        document.getElementById('body-success').innerHTML = html;
+    });
 
-    function updateTotal() {
-        const s = parseInt(document.getElementById('stat-s').innerText);
-        const c = parseInt(document.getElementById('stat-c').innerText);
-        document.getElementById('stat-all').innerText = s + c;
-    }
+    db.ref('CancelledBookings').on('value', snap => {
+        let html = "";
+        snap.forEach(child => {
+            const r = child.val();
+            html += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td class="text-danger">NOT ARRIVED</td></tr>`;
+        });
+        document.getElementById('body-cancel').innerHTML = html;
+    });
 </script>
 </body>
 </html>
