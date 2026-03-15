@@ -1,89 +1,68 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartPark | Admin Master Panel</title>
+    <title>SmartPark | Admin Analytics</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
-        :root { --primary: #00d2ff; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05); }
-        body { margin: 0; font-family: 'Poppins', sans-serif; background: #0b121f; color: white; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; }
-        
-        /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--glass); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
-        .stat-card h3 { font-size: 0.8rem; color: #888; margin: 0; }
-        .stat-num { font-size: 2rem; font-weight: 800; color: var(--primary); display: block; margin-top: 5px; }
-
-        /* Tabs Navigation */
-        .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 5px; border-radius: 12px; width: fit-content; }
-        .tab-btn { background: none; border: none; color: #888; padding: 10px 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; border-radius: 8px; transition: 0.3s; }
+        :root { --primary: #00d2ff; --success: #22c55e; --danger: #ef4444; --bg: #0b121f; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .analysis-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .ana-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .ana-num { font-size: 2rem; font-weight: 800; display: block; color: var(--primary); }
+        .tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+        .tab-btn { background: rgba(255,255,255,0.05); border: none; color: #888; padding: 12px 25px; cursor: pointer; border-radius: 10px; font-weight: 600; }
         .tab-btn.active { background: var(--primary); color: #0b121f; }
-
-        /* Table Design */
-        .table-container { background: var(--glass); border-radius: 20px; padding: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .table-box { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; text-transform: uppercase; }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.85rem; }
-        
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; }
-        .badge-success { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
-        .badge-cancel { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-
-        .login-box { text-align: center; max-width: 350px; margin: 100px auto; padding: 30px; background: var(--glass); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; box-sizing: border-box; }
+        th { text-align: left; padding: 15px; color: var(--primary); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
         .hide { display: none !important; }
-        @media print { .no-print { display: none; } body { background: white; color: black; } table { color: black; border: 1px solid #ddd; } }
+        .login-screen { text-align: center; margin-top: 100px; }
+        input[type="password"] { padding: 12px; border-radius: 10px; border: none; width: 250px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="login-section" class="login-box">
-        <i class="fas fa-user-lock fa-3x" style="color: var(--primary); margin-bottom: 15px;"></i>
-        <h2>Admin Login</h2>
-        <input type="text" id="user" placeholder="Username">
-        <input type="password" id="pass" placeholder="Password">
-        <button onclick="login()" style="width:100%; padding:12px; background:var(--primary); border:none; border-radius:10px; font-weight:700; cursor:pointer; margin-top:10px;">LOGIN</button>
+    <div id="login-ui" class="login-screen">
+        <h1>Admin Access</h1>
+        <input type="password" id="admin-pw" placeholder="Enter Admin Password">
+        <button onclick="doLogin()" style="padding:12px 20px; border-radius:10px; border:none; background:var(--primary); cursor:pointer; font-weight:700">LOGIN</button>
     </div>
 
-    <div id="dashboard-section" class="hide">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h1 style="margin: 0; font-weight: 800;">SmartPark <span style="color:var(--primary)">Analytics</span></h1>
-            <button class="no-print" onclick="window.print()" style="padding:10px 20px; background:var(--primary); border:none; border-radius:10px; font-weight:700; cursor:pointer;"><i class="fas fa-print"></i> PRINT REPORT</button>
+    <div id="admin-dash" class="hide">
+        <h1>Parking <span style="color:var(--primary)">Analytics</span></h1>
+        
+        <div class="analysis-grid">
+            <div class="ana-card"><h3>Total Bookings</h3><span class="ana-num" id="stat-all">0</span></div>
+            <div class="ana-card"><h3>Successful</h3><span class="ana-num" id="stat-s" style="color:var(--success)">0</span></div>
+            <div class="ana-card"><h3>Cancelled</h3><span class="ana-num" id="stat-c" style="color:var(--danger)">0</span></div>
         </div>
 
-        <div class="stats-grid no-print">
-            <div class="stat-card"><h3>SUCCESSFUL PARKINGS</h3><span class="stat-num" id="stat-ok">0</span></div>
-            <div class="stat-card"><h3>CANCELLED (TIMEOUT)</h3><span class="stat-num" id="stat-fail" style="color:var(--danger)">0</span></div>
+        <div class="tabs">
+            <button id="btn-s" class="tab-btn active" onclick="switchView('s')">Arrived History</button>
+            <button id="btn-c" class="tab-btn" onclick="switchView('c')">Cancelled (No-Show)</button>
         </div>
 
-        <div class="tabs no-print">
-            <button id="t1" class="tab-btn active" onclick="show('success')">Parking History</button>
-            <button id="t2" class="tab-btn" onclick="show('cancelled')">Cancelled Bookings</button>
-        </div>
-
-        <div class="table-container">
-            <div id="view-success">
+        <div class="table-box">
+            <div id="view-s">
                 <table>
-                    <thead>
-                        <tr><th>Slot</th><th>Vehicle No</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr>
-                    </thead>
-                    <tbody id="body-success"></tbody>
+                    <thead><tr><th>Slot</th><th>Vehicle No</th><th>In Time</th><th>Out Time</th><th>Status</th></tr></thead>
+                    <tbody id="body-s"></tbody>
                 </table>
             </div>
-
-            <div id="view-cancelled" class="hide">
+            <div id="view-c" class="hide">
                 <table>
-                    <thead>
-                        <tr><th>Vehicle No</th><th>Driver NIC</th><th>Booked At</th><th>Reason</th></tr>
-                    </thead>
-                    <tbody id="body-cancelled"></tbody>
+                    <thead><tr><th>Vehicle No</th><th>NIC</th><th>Booked At</th><th>Reason</th></tr></thead>
+                    <tbody id="body-c"></tbody>
                 </table>
             </div>
         </div>
@@ -91,78 +70,63 @@
 </div>
 
 <script>
-    // --- Paste your Firebase Config here ---
     var firebaseConfig = {
         apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
         databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
-        projectId: "smart-parking-system-b0f8f",
+        projectId: "smart-parking-system-b0f8f"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function login() {
-        let u = document.getElementById('user').value;
-        let p = document.getElementById('pass').value;
-        if(u === "admin" && p === "shop123") {
-            document.getElementById('login-section').classList.add('hide');
-            document.getElementById('dashboard-section').classList.remove('hide');
+    function doLogin() {
+        if(document.getElementById('admin-pw').value === "shop123") {
+            document.getElementById('login-ui').classList.add('hide');
+            document.getElementById('admin-dash').classList.remove('hide');
             startSync();
-        } else { alert("Login Failed!"); }
+        } else { alert("Wrong Password!"); }
     }
 
-    function show(type) {
-        document.getElementById('view-success').classList.toggle('hide', type !== 'success');
-        document.getElementById('view-cancelled').classList.toggle('hide', type !== 'cancelled');
-        document.getElementById('t1').classList.toggle('active', type === 'success');
-        document.getElementById('t2').classList.toggle('active', type === 'cancelled');
+    function switchView(v) {
+        document.getElementById('view-s').classList.toggle('hide', v !== 's');
+        document.getElementById('view-c').classList.toggle('hide', v !== 'c');
+        document.getElementById('btn-s').classList.toggle('active', v === 's');
+        document.getElementById('btn-c').classList.toggle('active', v === 'c');
     }
 
     function startSync() {
-        // 1. Success History Load
         db.ref('ParkingHistory').on('value', snap => {
             const data = snap.val();
-            const body = document.getElementById('body-success');
+            const body = document.getElementById('body-s');
             body.innerHTML = "";
             let count = 0;
-            if(data) {
-                for(let id in data) {
-                    count++;
-                    let r = data[id];
-                    body.innerHTML += `<tr>
-                        <td><b>${r.slotID}</b></td><td>${r.vehicleNo}</td>
-                        <td>${r.inTime || '--'}</td><td>${r.outTime || '--'}</td>
-                        <td>${calculateMins(r.inTime, r.outTime)}</td>
-                        <td><span class="badge badge-success">Completed</span></td>
-                    </tr>`;
-                }
+            for(let id in data) {
+                count++;
+                let r = data[id];
+                body.innerHTML += `<tr><td><b>${r.slotID}</b></td><td>${r.vehicleNo}</td><td>${r.inTime}</td><td>${r.outTime || 'Live'}</td><td><span class="badge badge-success">ARRIVED</span></td></tr>`;
             }
-            document.getElementById('stat-ok').innerText = count;
+            document.getElementById('stat-s').innerText = count;
+            updateTotal();
         });
 
-        // 2. Cancelled History Load
         db.ref('CancelledBookings').on('value', snap => {
             const data = snap.val();
-            const body = document.getElementById('body-cancelled');
+            const body = document.getElementById('body-c');
             body.innerHTML = "";
             let count = 0;
-            if(data) {
-                for(let id in data) {
-                    count++;
-                    let r = data[id];
-                    body.innerHTML += `<tr>
-                        <td>${r.vehicleNo}</td><td>${r.driverNIC}</td>
-                        <td>${r.bookedAt}</td><td><span class="badge badge-cancel">Timeout</span></td>
-                    </tr>`;
-                }
+            for(let id in data) {
+                count++;
+                let r = data[id];
+                body.innerHTML += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td>${r.bookedAt}</td><td><span class="badge badge-danger">TIMEOUT</span></td></tr>`;
             }
-            document.getElementById('stat-fail').innerText = count;
+            document.getElementById('stat-c').innerText = count;
+            updateTotal();
         });
     }
 
-    function calculateMins(inT, outT) {
-        if(!inT || !outT) return "0 mins";
-        let diff = new Date(outT) - new Date(inT);
-        return Math.floor(diff / 60000) + " mins";
+    function updateTotal() {
+        const s = parseInt(document.getElementById('stat-s').innerText);
+        const c = parseInt(document.getElementById('stat-c').innerText);
+        document.getElementById('stat-all').innerText = s + c;
     }
 </script>
 </body>
