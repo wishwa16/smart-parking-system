@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SmartPark | Admin Control</title>
+    <title>SmartPark | Master Admin</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
@@ -21,13 +21,13 @@
 <body>
 
     <h1>Master Admin Dashboard</h1>
-    <p id="status-msg" style="color: #888;">System Monitoring Active...</p>
+    <p id="status-msg" style="color: #888;">Monitoring Parking Slots Live...</p>
 
     <div class="grid">
         <div class="card">
             <h2 style="color: var(--success)">Parking History (Success)</h2>
             <table>
-                <thead><tr><th>Slot</th><th>Vehicle No</th><th>In Time</th></tr></thead>
+                <thead><tr><th>Slot</th><th>Vehicle No</th><th>Out Time</th></tr></thead>
                 <tbody id="body-success"></tbody>
             </table>
         </div>
@@ -44,14 +44,13 @@
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com/",
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com",
         projectId: "smart-parking-system-b0f8f"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- CRITICAL MONITORING LOGIC ---
-    // Every 5 seconds, check all slots for timeouts
+    // --- MAIN MONITORING LOGIC ---
     setInterval(() => {
         db.ref('Slots').once('value', snap => {
             const slots = snap.val();
@@ -59,43 +58,46 @@
 
             for (let id in slots) {
                 const data = slots[id];
-                // If time is up AND vehicle hasn't arrived (sensorStatus is 0)
-                if (data.expiresAt && now > data.expiresAt && data.sensorStatus === 0) {
-                    console.log("Expiring Slot: " + id);
-                    
-                    // 1. Copy data to CancelledBookings
-                    db.ref('CancelledBookings').push({
+
+                // Logic 1: Success Parking (වාහනය ඇවිත් ගියොත්)
+                if (data.status === "Booked" && data.sensorStatus === 0 && data.wasOccupied === true) {
+                    db.ref('ParkingHistory').push({
+                        slotID: id,
                         vehicleNo: data.vehicleNo,
                         driverNIC: data.driverNIC,
                         bookedAt: data.bookedAt,
-                        reason: "Timeout - No Show",
+                        outTime: new Date().toLocaleString()
+                    }).then(() => {
+                        db.ref('Slots/' + id).remove(); // ස්ලොට් එක නිදහස් කරයි
+                    });
+                }
+
+                // Logic 2: Cancelled Parking (ටයිම් අවුට් වුණොත්)
+                if (data.expiresAt && now > data.expiresAt && data.sensorStatus === 0 && !data.wasOccupied) {
+                    db.ref('CancelledBookings').push({
+                        vehicleNo: data.vehicleNo,
+                        driverNIC: data.driverNIC,
+                        reason: "No Show - Timeout",
                         slotID: id
                     }).then(() => {
-                        // 2. Clear the slot so it becomes available again
                         db.ref('Slots/' + id).remove();
                     });
                 }
             }
         });
-    }, 5000);
+    }, 3000);
 
-    // --- Display Data ---
+    // Display Lists
     db.ref('ParkingHistory').on('value', snap => {
-        let html = "";
-        snap.forEach(child => {
-            const r = child.val();
-            html += `<tr><td><b>${r.slotID || 'S1'}</b></td><td>${r.vehicleNo}</td><td class="text-success">${r.inTime}</td></tr>`;
-        });
-        document.getElementById('body-success').innerHTML = html;
+        let h = "";
+        snap.forEach(c => { const r = c.val(); h += `<tr><td>${r.slotID}</td><td>${r.vehicleNo}</td><td class="text-success">${r.outTime}</td></tr>`; });
+        document.getElementById('body-success').innerHTML = h;
     });
 
     db.ref('CancelledBookings').on('value', snap => {
-        let html = "";
-        snap.forEach(child => {
-            const r = child.val();
-            html += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td class="text-danger">NOT ARRIVED</td></tr>`;
-        });
-        document.getElementById('body-cancel').innerHTML = html;
+        let h = "";
+        snap.forEach(c => { const r = c.val(); h += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td class="text-danger">Timeout</td></tr>`; });
+        document.getElementById('body-cancel').innerHTML = h;
     });
 </script>
 </body>
