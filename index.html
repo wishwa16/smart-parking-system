@@ -2,112 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartPark | User Portal</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --available: #22c55e; --booked: #ef4444; --bg: #0f172a; --primary: #00d2ff; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; padding: 20px; text-align: center; }
-        .container { max-width: 450px; margin: auto; }
-        .card { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: rgba(0,0,0,0.3); color: white; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1); }
-        .slot-card { padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
-        .btn-book { padding: 8px 15px; background: var(--available); border: none; border-radius: 8px; color: white; font-weight: 800; cursor: pointer; }
-        .booked-status { color: var(--booked); font-weight: 800; font-size: 0.8rem; }
-        #timer { font-size: 3.5rem; font-weight: 800; color: #ffde59; margin: 15px 0; }
-        #qr-box { background: white; padding: 15px; border-radius: 15px; display: inline-block; }
+        .card { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); max-width: 400px; margin: auto; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: none; background: rgba(0,0,0,0.3); color: white; box-sizing: border-box; }
+        .slot-card { padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); margin-bottom: 10px; }
+        .btn-book { padding: 8px 15px; background: var(--available); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; }
+        #timer { font-size: 3rem; color: #ffde59; font-weight: 800; }
         .hide { display: none !important; }
     </style>
 </head>
 <body>
-
-<div class="container">
     <div id="ui-selection">
         <h1>SmartPark</h1>
         <div class="card">
             <input type="text" id="v_no" placeholder="Vehicle No (e.g. CAB-1234)">
             <input type="text" id="d_nic" placeholder="Driver NIC">
+            <h3 style="text-align: left;">Available Slots</h3>
+            <div id="slot-list"></div>
         </div>
-        <h3 style="text-align: left;">Available Slots</h3>
-        <div id="slot-list">
-            </div>
     </div>
 
     <div id="ui-active" class="hide">
         <div class="card">
             <h2 style="color: var(--available);">Booking Reserved!</h2>
             <div id="timer">01:00</div>
-            <div id="qr-box"></div>
-            <p style="color: #ef4444;">Arrive within 1 minute or booking cancels.</p>
+            <div id="qr-box" style="background:white; padding:15px; display:inline-block; border-radius:10px;"></div>
+            <p style="color: #ef4444;">Arrive within 1 minute at Entrance.</p>
         </div>
     </div>
-</div>
 
-<script>
-    // --- ඔයාගේ Firebase විස්තර ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        authDomain: "smart-parking-system-b0f8f.firebaseapp.com",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com",
-        projectId: "smart-parking-system-b0f8f"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
+            databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com",
+            projectId: "smart-parking-system-b0f8f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    // 1. Slots Load කිරීම
-    db.ref('Slots').on('value', snap => {
-        const data = snap.val() || {};
-        const list = document.getElementById('slot-list');
-        list.innerHTML = "";
-        ['S1', 'S2', 'S3'].forEach(id => {
-            const isBooked = data[id] && data[id].status === "Booked";
-            list.innerHTML += `
-                <div class="slot-card">
-                    <span><b>Slot ${id}</b></span>
-                    ${isBooked ? `<span class="booked-status">BOOKED</span>` : `<button class="btn-book" onclick="startBooking('${id}')">BOOK NOW</button>`}
-                </div>`;
+        db.ref('Slots').on('value', snap => {
+            const data = snap.val() || {};
+            const list = document.getElementById('slot-list');
+            list.innerHTML = "";
+            ['S1', 'S2', 'S3'].forEach(id => {
+                const isBooked = data[id] && data[id].status === "Booked";
+                list.innerHTML += `<div class="slot-card"><span><b>Slot ${id}</b></span>
+                ${isBooked ? `<span style="color:var(--booked)">BOOKED</span>` : `<button class="btn-book" onclick="startBooking('${id}')">BOOK NOW</button>`}</div>`;
+            });
         });
-    });
 
-    // 2. Booking කිරීම
-    function startBooking(id) {
-        const v = document.getElementById('v_no').value.trim();
-        const n = document.getElementById('d_nic').value.trim();
-        if(!v || !n) return alert("Please enter details!");
+        function startBooking(id) {
+            const v = document.getElementById('v_no').value.trim();
+            const n = document.getElementById('d_nic').value.trim();
+            if(!v || !n) return alert("Please enter details!");
 
-        const exp = Date.now() + 60000;
-        const bTime = new Date().toLocaleString();
-
-        db.ref('Slots/' + id).set({
-            status: "Booked",
-            vehicleNo: v,
-            driverNIC: n,
-            bookedAt: bTime,
-            expiresAt: exp,
-            sensorStatus: 0
-        }).then(() => {
-            document.getElementById('ui-selection').classList.add('hide');
-            document.getElementById('ui-active').classList.remove('hide');
-            new QRCode(document.getElementById("qr-box"), v);
-
-            const timer = setInterval(() => {
-                const diff = exp - Date.now();
-                if(diff <= 0) {
-                    clearInterval(timer);
-                    alert("Timeout! Slot released.");
-                    location.reload();
-                } else {
-                    let sec = Math.floor(diff/1000);
-                    document.getElementById('timer').innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
-                }
-            }, 1000);
-        }).catch(err => {
-            alert("Firebase Error: " + err.message);
-        });
-    }
-</script>
+            const exp = Date.now() + 60000;
+            db.ref('Slots/' + id).set({ status: "Booked", vehicleNo: v, driverNIC: n, expiresAt: exp, sensorStatus: 0 }).then(() => {
+                document.getElementById('ui-selection').classList.add('hide');
+                document.getElementById('ui-active').classList.remove('hide');
+                new QRCode(document.getElementById("qr-box"), v);
+                const timer = setInterval(() => {
+                    const diff = exp - Date.now();
+                    if(diff <= 0) { clearInterval(timer); location.reload(); }
+                    else {
+                        let sec = Math.floor(diff/1000);
+                        document.getElementById('timer').innerText = `00:${sec < 10 ? '0' : ''}${sec}`;
+                    }
+                }, 1000);
+            });
+        }
+    </script>
 </body>
 </html>
