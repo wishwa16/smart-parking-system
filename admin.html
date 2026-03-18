@@ -1,41 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>SmartPark | Master Admin</title>
+    <title>SmartPark | Admin & Reports</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00d2ff; --success: #22c55e; --danger: #ef4444; --bg: #0b121f; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-        .card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        h2 { color: var(--primary); border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; }
-        .text-success { color: var(--success); font-weight: bold; }
-        .text-danger { color: var(--danger); font-weight: bold; }
+        body { font-family: 'Poppins'; background: #0b121f; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.8rem; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; text-align: left; }
+        .btn-report { background: #00d2ff; color: black; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; float: right; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <h1>Master Admin Dashboard</h1>
-    <p id="status-msg" style="color: #888;">Monitoring Parking Slots Live...</p>
-
     <div class="grid">
         <div class="card">
-            <h2 style="color: var(--success)">Parking History (Success)</h2>
+            <button class="btn-report" onclick="downloadCSV('ParkingHistory', 'Success_Report')">Report</button>
+            <h2 style="color: #22c55e">Parking Success</h2>
             <table>
-                <thead><tr><th>Slot</th><th>Vehicle No</th><th>Out Time</th></tr></thead>
+                <thead><tr><th>Slot</th><th>Vehicle</th><th>Date/Time</th></tr></thead>
                 <tbody id="body-success"></tbody>
             </table>
         </div>
-
         <div class="card">
-            <h2 style="color: var(--danger)">Cancelled History (No-Show)</h2>
+            <button class="btn-report" onclick="downloadCSV('CancelledBookings', 'Cancelled_Report')">Report</button>
+            <h2 style="color: #ef4444">Cancelled (No-Show)</h2>
             <table>
-                <thead><tr><th>Vehicle No</th><th>NIC</th><th>Reason</th></tr></thead>
+                <thead><tr><th>Vehicle</th><th>NIC</th><th>Reason</th></tr></thead>
                 <tbody id="body-cancel"></tbody>
             </table>
         </div>
@@ -43,62 +37,51 @@
 
 <script>
     const firebaseConfig = {
-        apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw",
-        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com",
-        projectId: "smart-parking-system-b0f8f"
+        databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- MAIN MONITORING LOGIC ---
     setInterval(() => {
         db.ref('Slots').once('value', snap => {
             const slots = snap.val();
             const now = Date.now();
-
             for (let id in slots) {
                 const data = slots[id];
-
-                // Logic 1: Success Parking (වාහනය ඇවිත් ගියොත්)
-                if (data.status === "Booked" && data.sensorStatus === 0 && data.wasOccupied === true) {
-                    db.ref('ParkingHistory').push({
-                        slotID: id,
-                        vehicleNo: data.vehicleNo,
-                        driverNIC: data.driverNIC,
-                        bookedAt: data.bookedAt,
-                        outTime: new Date().toLocaleString()
-                    }).then(() => {
-                        db.ref('Slots/' + id).remove(); // ස්ලොට් එක නිදහස් කරයි
-                    });
-                }
-
-                // Logic 2: Cancelled Parking (ටයිම් අවුට් වුණොත්)
-                if (data.expiresAt && now > data.expiresAt && data.sensorStatus === 0 && !data.wasOccupied) {
-                    db.ref('CancelledBookings').push({
-                        vehicleNo: data.vehicleNo,
-                        driverNIC: data.driverNIC,
-                        reason: "No Show - Timeout",
-                        slotID: id
-                    }).then(() => {
-                        db.ref('Slots/' + id).remove();
-                    });
+                if (data.status === "Booked" && data.sensorStatus === 0 && data.wasOccupied) {
+                    db.ref('ParkingHistory').push({ slotID: id, vehicleNo: data.vehicleNo, time: new Date().toLocaleString() })
+                    .then(() => db.ref('Slots/' + id).remove());
+                } else if (data.expiresAt && now > data.expiresAt && data.sensorStatus === 0 && !data.wasOccupied) {
+                    db.ref('CancelledBookings').push({ vehicleNo: data.vehicleNo, driverNIC: data.driverNIC, reason: "Timeout" })
+                    .then(() => db.ref('Slots/' + id).remove());
                 }
             }
         });
     }, 3000);
 
-    // Display Lists
     db.ref('ParkingHistory').on('value', snap => {
-        let h = "";
-        snap.forEach(c => { const r = c.val(); h += `<tr><td>${r.slotID}</td><td>${r.vehicleNo}</td><td class="text-success">${r.outTime}</td></tr>`; });
-        document.getElementById('body-success').innerHTML = h;
+        let rows = "";
+        snap.forEach(c => { const r = c.val(); rows += `<tr><td>${r.slotID}</td><td>${r.vehicleNo}</td><td>${r.time}</td></tr>`; });
+        document.getElementById('body-success').innerHTML = rows;
     });
 
     db.ref('CancelledBookings').on('value', snap => {
-        let h = "";
-        snap.forEach(c => { const r = c.val(); h += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td class="text-danger">Timeout</td></tr>`; });
-        document.getElementById('body-cancel').innerHTML = h;
+        let rows = "";
+        snap.forEach(c => { const r = c.val(); rows += `<tr><td>${r.vehicleNo}</td><td>${r.driverNIC}</td><td>Timeout</td></tr>`; });
+        document.getElementById('body-cancel').innerHTML = rows;
     });
+
+    function downloadCSV(node, fileName) {
+        db.ref(node).once('value', snap => {
+            let csv = "data:text/csv;charset=utf-8,";
+            csv += (node === 'ParkingHistory') ? "Slot,Vehicle No,Time\n" : "Vehicle No,NIC,Reason\n";
+            snap.forEach(c => {
+                const r = c.val();
+                csv += (node === 'ParkingHistory') ? `${r.slotID},${r.vehicleNo},${r.time}\n` : `${r.vehicleNo},${r.driverNIC},Timeout\n`;
+            });
+            window.open(encodeURI(csv));
+        });
+    }
 </script>
 </body>
 </html>
