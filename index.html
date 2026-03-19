@@ -1,64 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SmartPark | User</title>
+    <title>SmartPark | User Booking</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 15px; max-width: 400px; margin: auto; }
-        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; }
-        .btn { background: #22c55e; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; }
-        .slot { display: flex; justify-content: space-between; background: #334155; padding: 12px; margin: 8px 0; border-radius: 8px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; text-align: center; padding: 20px; }
+        .card { background: #1e293b; padding: 25px; border-radius: 15px; max-width: 400px; margin: 20px auto; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; }
+        button { background: #22c55e; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .slot { display: flex; justify-content: space-between; background: #334155; padding: 15px; margin: 10px 0; border-radius: 10px; }
         .hide { display: none; }
     </style>
 </head>
 <body>
     <div id="booking-ui">
-        <h1>Smart Parking</h1>
+        <h1>Reserve Your Spot</h1>
         <div class="card">
-            <input type="text" id="v_no" placeholder="Vehicle No">
-            <input type="text" id="d_nic" placeholder="Driver NIC">
-            <div id="slot-list"></div>
+            <input type="text" id="v_no" placeholder="Vehicle Number (eg: WP CAS-1234)">
+            <input type="text" id="d_nic" placeholder="Driver NIC Number">
+            <div id="slot-list" style="margin-top: 20px;"></div>
         </div>
     </div>
+
     <div id="active-ui" class="hide">
         <div class="card">
-            <h2>Reserved!</h2>
-            <div id="timer" style="font-size: 3rem; color: #fbbf24;">01:00</div>
-            <div id="qrcode" style="background:white; padding:10px; display:inline-block; border-radius:10px;"></div>
+            <h2 style="color: #22c55e;">Booking Successful!</h2>
+            <p>Your 1-minute reservation timer:</p>
+            <div id="timer" style="font-size: 3.5rem; color: #fbbf24; font-weight: bold; margin: 10px 0;">01:00</div>
+            <div id="qrcode" style="background:white; padding:15px; display:inline-block; border-radius:10px; margin-top:10px;"></div>
+            <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 15px;">Please arrive at the gate within 60 seconds.</p>
         </div>
     </div>
+
     <script>
-        const config = { apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw", databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com" };
+        const config = { 
+            apiKey: "AIzaSyBg6ewTUzkhpYQVttFQBdpYu2eV8MfSdWw", 
+            databaseURL: "https://smart-parking-system-b0f8f-default-rtdb.firebaseio.com" 
+        };
         firebase.initializeApp(config);
         const db = firebase.database();
 
+        // ස්ලොට් වල තත්ත්වය Live පෙන්වීම
         db.ref('Slots').on('value', snap => {
             const data = snap.val() || {};
             let html = "";
             ['S1', 'S2', 'S3'].forEach(id => {
-                const isB = data[id] && data[id].status === "Booked";
-                html += `<div class="slot"><span>Slot ${id}</span> 
-                ${isB ? '<b style="color:#ef4444">BOOKED</b>' : `<button onclick="book('${id}')">BOOK</button>`}</div>`;
+                const isBooked = data[id] && data[id].status === "Booked";
+                html += `<div class="slot">
+                    <span>Slot ${id}</span> 
+                    ${isBooked ? '<b style="color:#ef4444">OCCUPIED</b>' : `<button style="width:auto; padding:5px 15px;" onclick="confirmBooking('${id}')">BOOK NOW</button>`}
+                </div>`;
             });
             document.getElementById('slot-list').innerHTML = html;
         });
 
-        function book(id) {
+        function confirmBooking(id) {
             const v = document.getElementById('v_no').value;
             const n = document.getElementById('d_nic').value;
-            if(!v || !n) return alert("Enter details!");
-            const exp = Date.now() + 60000;
-            db.ref('Slots/'+id).set({ status:"Booked", vehicleNo:v, driverNIC:n, expiresAt:exp, sensorStatus:0, wasOccupied: false });
+            if(!v || !n) return alert("Please enter Vehicle No and NIC!");
+
+            const expiry = Date.now() + 60000; // තත්පර 60 කින් Expire වේ
+            db.ref('Slots/'+id).set({ 
+                status: "Booked", 
+                vehicleNo: v, 
+                driverNIC: n, 
+                expiresAt: expiry, 
+                sensorStatus: 0, 
+                wasOccupied: false 
+            });
+
+            // UI එක මාරු කිරීම
             document.getElementById('booking-ui').classList.add('hide');
             document.getElementById('active-ui').classList.remove('hide');
+            
+            // QR Code එක සෑදීම
             new QRCode(document.getElementById("qrcode"), v);
-            setInterval(() => {
-                let s = Math.floor((exp - Date.now())/1000);
-                if(s <= 0) location.reload();
-                document.getElementById('timer').innerText = `00:${s < 10 ? '0' : ''}${s}`;
+
+            // Timer එක පටන් ගැනීම
+            const timerInt = setInterval(() => {
+                let diff = Math.floor((expiry - Date.now())/1000);
+                if(diff <= 0) {
+                    clearInterval(timerInt);
+                    location.reload();
+                }
+                document.getElementById('timer').innerText = `00:${diff < 10 ? '0' : ''}${diff}`;
             }, 1000);
         }
     </script>
